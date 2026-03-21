@@ -96,7 +96,10 @@ palettes = {
 def create_chart(df_list, loc_name, title, h=300):
     df = pd.DataFrame(df_list).melt('時刻', var_name='項目', value_name='人数')
     dom, ran = palettes.get(loc_name, (all_groups, palettes["フィニッシュ"][1]))
-    t_vals = [f"{9+m//60:02d}:{m%60:02d}" for m in range(0, 451, 60)]
+    
+    # ★ ここを「30」分刻みに修正しています！ ★
+    t_vals = [f"{9+m//60:02d}:{m%60:02d}" for m in range(0, 451, 30)]
+    
     return alt.Chart(df).mark_area(opacity=0.6, interpolate='monotone').encode(
         x=alt.X('時刻:N', axis=alt.Axis(labelAngle=-45, values=t_vals, title=None)),
         y=alt.Y('人数:Q', stack=None, title=None),
