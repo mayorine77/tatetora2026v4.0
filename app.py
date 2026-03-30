@@ -1,23 +1,32 @@
 import streamlit as st
 from PIL import Image
+import io
+import base64
 import os
 import pandas as pd
 import numpy as np
 import altair as alt
 
-# --- 1. ページ設定・アイコン設定 (PNG対応版) ---
-# GitHubの実際のファイル名「S-ylph.png」に完全に合わせます
-ICON_FILE = "S-ylph.png"
-# 正しいRaw画像URL (PNG、?v=5 でキャッシュを強制打破)
-ICON_URL = "https://raw.githubusercontent.com/mayorine77/S-ylph_v1.0/main/S-ylph.png?v=5"
+# --- 1. アイコン設定 (Base64埋め込み & PNG対応) ---
 
-# タブ用アイコンの読み込み
-icon_image = "🏎️"
-if os.path.exists(ICON_FILE):
+# 画像データそのものを文字列として保持 (外部URLに依存しない)
+BASE64_ICON = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABAAAAAIvCAIAAABlVT4NAAA...（中略）...AElFTkSuQmCC"
+
+# 提供されたBase64文字列を、貼り付けた際に途切れないようにしてください。
+# ※以下の変数に、あなたが作成した「data:image/png;base64,iVBORW...」の全文字列を貼り付けてください。
+# ここでは説明のため短縮していますが、実際には非常に長い文字列になります。
+BASE64_DATA = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABAAAAAIvCAIAAABlVT4NAAA...（中書き込み）...AElFTkSuQmCC"
+
+# タブ用アイコンの生成（Base64から変換）
+def get_image_from_base64(b64_str):
     try:
-        icon_image = Image.open(ICON_FILE)
-    except Exception:
-        pass
+        header, encoded = b64_str.split(",", 1)
+        data = base64.b64decode(encoded)
+        return Image.open(io.BytesIO(data))
+    except:
+        return "🏎️"
+
+icon_image = get_image_from_base64(BASE64_DATA)
 
 st.set_page_config(
     page_title="S-YLPH | タテトラ2026 決定版",
@@ -25,7 +34,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- 2. スタイル設定 & スマホ用ホーム画面アイコン設定 (PNG対応版) ---
+# --- 2. スタイル設定 & スマホ用ホーム画面アイコン設定 (直接埋め込み版) ---
 st.markdown(f"""
     <style>
     /* 全体表示の時はスクロールできるように設定 */
@@ -34,12 +43,9 @@ st.markdown(f"""
     section[data-testid="stSidebar"] {{ width: 150px !important; }}
     </style>
 
-    <link rel="apple-touch-icon" href="{ICON_URL}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{ICON_URL}">
-    
-    <link rel="icon" type="image/png" sizes="192x192" href="{ICON_URL}">
-    
-    <link rel="shortcut icon" type="image/png" href="{ICON_URL}">
+    <link rel="apple-touch-icon" href="{BASE64_DATA}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{BASE64_DATA}">
+    <link rel="shortcut icon" type="image/png" href="{BASE64_DATA}">
     """, unsafe_allow_html=True)
 
 # タイトル表示
