@@ -3,13 +3,14 @@ from PIL import Image
 import os
 import pandas as pd
 import numpy as np
-import altair as alt  # 修正済
+import altair as alt
 
-# --- 1. ページ設定 (ここを最新版に差し替え) ---
-# GitHubの実際のファイル名「S-YLPH.jpg」に完全に合わせます
-ICON_FILE = "S-YLPH.jpg" 
-# 正しいRaw画像URL
-ICON_URL = "https://raw.githubusercontent.com/mayorine77/S-ylph_v1.0/main/S-YLPH.jpg?v=2"
+# --- 1. ページ設定・アイコン設定 ---
+# GitHubの実際のファイル名とRaw URL（スマホ用）
+ICON_FILE = "S-YLPH.jpg"
+ICON_URL = "https://raw.githubusercontent.com/mayorine77/S-ylph_v1.0/main/S-YLPH.jpg?v=4"
+
+# タブ用アイコンの読み込み
 icon_image = "🏎️"
 if os.path.exists(ICON_FILE):
     try:
@@ -23,20 +24,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- 2. スタイル & スマホアイコン設定 ---
-st.markdown(f"""
-    <style>
-    [data-testid="stAppViewContainer"] {{ overflow-y: auto !important; }}
-    .main .block-container {{ padding: 1rem !important; }}
-    section[data-testid="stSidebar"] {{ width: 150px !important; }}
-    </style>
-
-    <link rel="apple-touch-icon" href="{ICON_URL}">
-    <link rel="icon" sizes="192x192" href="{ICON_URL}">
-    """, unsafe_allow_html=True)
-
-# --- 3. スタイル設定 & スマホ用アイコン設定 ---
-# CSSの { } を Pythonのf-stringで扱うために {{ }} にエスケープしています
+# --- 2. スタイル設定 & スマホ用ホーム画面アイコン設定 ---
 st.markdown(f"""
     <style>
     /* 全体表示の時はスクロールできるように設定 */
@@ -46,14 +34,15 @@ st.markdown(f"""
     </style>
 
     <link rel="apple-touch-icon" href="{ICON_URL}">
-    <link rel="icon" sizes="192x192" href="{ICON_URL}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{ICON_URL}">
+    <link rel="icon" type="image/jpeg" sizes="192x192" href="{ICON_URL}">
     """, unsafe_allow_html=True)
 
 # タイトル表示
 st.title("S-YLPH")
 st.caption("Sector Yield & Level Prediction Hub - タテトラ2026 シミュレーター")
 
-# --- 4. データ生成ロジック (キャッシュ利用) ---
+# --- 3. データ生成ロジック (キャッシュ利用) ---
 @st.cache_data
 def get_sim_data_v3():
     waves = [
@@ -98,7 +87,7 @@ def get_sim_data_v3():
 
 pts = get_sim_data_v3()
 
-# --- 5. UI/ロジック ---
+# --- 4. UI設定 ---
 loc = st.sidebar.selectbox("📌 地点切替", ["📊 全地点一括（モニタリング）", "スイム地点A", "スイムエリア", "トランジA", "トランジB", "バイクエリア", "ランエリア", "ゲート", "フィニッシュ"])
 
 all_groups = ["G1 (STD)", "G2 (STD)", "G3 (STD)", "G4 (STD)", "G5 (STD女子)", "G6 (SP男子)", "G7 (SP女子)", "G8 (CHA)", "G9 (JrA)", "G10 (JrB)", "G11 (スイミー)"]
@@ -135,7 +124,6 @@ def get_counts(target_m, l, p_list):
                 else: res["大人"] += 1
         return res
 
-# パレット定義
 palettes = {
     "スイム地点A": (["①スタート(橙)", "②周回(水)", "③アップ(黄)"], ["#FF8C00", "#00BFFF", "#FFD700"]),
     "スイムエリア": (["海中合計(水)"], ["#00BFFF"]),
@@ -153,38 +141,24 @@ def create_chart(df_list, loc_name, title, h=300):
     df = pd.DataFrame(df_list).melt('時刻', var_name='項目', value_name='人数')
     dom, ran = palettes.get(loc_name, (all_groups, palettes["フィニッシュ"][1]))
     t_vals = [f"{9+m//60:02d}:{m%60:02d}" for m in range(0, 451, 30)]
-    
     return alt.Chart(df).mark_area(opacity=0.6, interpolate='monotone').encode(
         x=alt.X('時刻:N', axis=alt.Axis(labelAngle=-45, values=t_vals, title=None)),
         y=alt.Y('人数:Q', stack=None, title=None),
         color=alt.Color('項目:N', scale=alt.Scale(domain=dom, range=ran), legend=alt.Legend(orient='right', title=None, labelFontSize=11)),
     ).properties(height=h, title=title)
 
-# --- 6. メイン描画部 ---
+# --- 5. メイン表示部 ---
 if loc == "📊 全地点一括（モニタリング）":
     st.subheader("🌐 全エリア状況一括")
     df_s, df_t, df_br, df_f = [], [], [], []
     for mm in range(0, 451):
         t = f"{9+mm//60:02d}:{mm%60:02d}"
-        rs = get_counts(mm, "スイムエリア", pts)
-        rta = get_counts(mm, "トランジA", pts)
-        rtb = get_counts(mm, "トランジB", pts)
-        rb = get_counts(mm, "バイクエリア", pts)
-        rr = get_counts(mm, "ランエリア", pts)
-        rf = get_counts(mm, "フィニッシュ", pts)
-        
+        rs, rta, rtb, rb, rr, rf = get_counts(mm, "スイムエリア", pts), get_counts(mm, "トランジA", pts), get_counts(mm, "トランジB", pts), get_counts(mm, "バイクエリア", pts), get_counts(mm, "ランエリア", pts), get_counts(mm, "フィニッシュ", pts)
         rs["時刻"], rf["時刻"] = t, t
-        df_s.append(rs)
-        df_f.append(rf)
-        
-        rt = {**rta, **rtb}
-        rt["時刻"] = t
-        df_t.append(rt)
-        
-        rbr = {"大人(バイク)": rb["大人"], "JrA(バイク)": rb["JrA"], "JrB(バイク)": rb["JrB"], "スイミー(バイク)": rb["スイミー"], 
-               "大人(ラン)": rr["大人"], "JrA(ラン)": rr["JrA"], "JrB(ラン)": rr["JrB"], "スイミー(ラン)": rr["スイミー"], "時刻": t}
+        df_s.append(rs); df_f.append(rf)
+        rt = {**rta, **rtb}; rt["時刻"] = t; df_t.append(rt)
+        rbr = {"大人(バイク)": rb["大人"], "JrA(バイク)": rb["JrA"], "JrB(バイク)": rb["JrB"], "スイミー(バイク)": rb["スイミー"], "大人(ラン)": rr["大人"], "JrA(ラン)": rr["JrA"], "JrB(ラン)": rr["JrB"], "スイミー(ラン)": rr["スイミー"], "時刻": t}
         df_br.append(rbr)
-        
     st.altair_chart(create_chart(df_s, "スイムエリア", "🌊 スイム（海中）"), use_container_width=True)
     st.altair_chart(create_chart(df_t, "トランジ合算", "⛺ トランジション（A+B）"), use_container_width=True)
     st.altair_chart(create_chart(df_br, "コース合算", "🚴‍♂️🏃‍♂️ コース（バイク＆ラン）"), use_container_width=True)
@@ -192,7 +166,5 @@ if loc == "📊 全地点一括（モニタリング）":
 else:
     df_l = []
     for mm in range(0, 451):
-        r = get_counts(mm, loc, pts)
-        r["時刻"] = f"{9+mm//60:02d}:{mm%60:02d}"
-        df_l.append(r)
+        r = get_counts(mm, loc, pts); r["時刻"] = f"{9+mm//60:02d}:{mm%60:02d}"; df_l.append(r)
     st.altair_chart(create_chart(df_l, loc, f"📊 {loc}"), use_container_width=True)
