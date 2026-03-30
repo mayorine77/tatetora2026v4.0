@@ -6,8 +6,8 @@ import numpy as np
 import altair as alt  # 修正済
 
 # --- 1. 設定項目（ここを自分のGitHub情報に書き換えてください） ---
-USER_NAME = "あなたのユーザー名"
-REPO_NAME = "あなたのリポジトリ名"
+USER_NAME = "mayorine77"
+REPO_NAME = "S-ylph_1.0"
 ICON_FILE = "S-YLPH.jpg"
 # GitHub上のRaw画像URL（スマホアイコン用）
 ICON_URL = f"https://raw.githubusercontent.com/{USER_NAME}/{REPO_NAME}/main/{ICON_FILE}"
