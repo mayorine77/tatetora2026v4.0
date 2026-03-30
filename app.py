@@ -7,17 +7,12 @@ import pandas as pd
 import numpy as np
 import altair as alt
 
-# --- 1. アイコン設定 (Base64埋め込み & PNG対応) ---
+# --- 1. アイコン設定 (Base64埋め込み & 名称修正) ---
 
-# 画像データそのものを文字列として保持 (外部URLに依存しない)
-BASE64_ICON = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABAAAAAIvCAIAAABlVT4NAAA...（中略）...AElFTkSuQmCC"
+# ※ここに「data:image/png;base64,iVBORW...」の全文字列を貼り付けてください
+BASE64_DATA = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABAAAAAIvCAIAAABlVT4NAAA...AElFTkSuQmCC"
 
-# 提供されたBase64文字列を、貼り付けた際に途切れないようにしてください。
-# ※以下の変数に、あなたが作成した「data:image/png;base64,iVBORW...」の全文字列を貼り付けてください。
-# ここでは説明のため短縮していますが、実際には非常に長い文字列になります。
-BASE64_DATA = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABAAAAAIvCAIAAABlVT4NAAA...（中書き込み）...AElFTkSuQmCC"
-
-# タブ用アイコンの生成（Base64から変換）
+# タブ用アイコンの生成
 def get_image_from_base64(b64_str):
     try:
         header, encoded = b64_str.split(",", 1)
@@ -28,31 +23,34 @@ def get_image_from_base64(b64_str):
 
 icon_image = get_image_from_base64(BASE64_DATA)
 
+# ページ設定（ブラウザのタブ名）
 st.set_page_config(
-    page_title="S-YLPH | タテトラ2026 決定版",
+    page_title="S-ylph",
     page_icon=icon_image,
     layout="wide"
 )
 
-# --- 2. スタイル設定 & スマホ用ホーム画面アイコン設定 (直接埋め込み版) ---
+# --- 2. スタイル設定 & スマホ用設定 (名称を S-ylph に固定) ---
 st.markdown(f"""
     <style>
-    /* 全体表示の時はスクロールできるように設定 */
     [data-testid="stAppViewContainer"] {{ overflow-y: auto !important; }}
     .main .block-container {{ padding: 1rem !important; }}
     section[data-testid="stSidebar"] {{ width: 150px !important; }}
     </style>
 
     <link rel="apple-touch-icon" href="{BASE64_DATA}">
-    <link rel="icon" type="image/png" sizes="192x192" href="{BASE64_DATA}">
-    <link rel="shortcut icon" type="image/png" href="{BASE64_DATA}">
+    <link rel="icon" type="image/png" href="{BASE64_DATA}">
+    
+    <meta name="apple-mobile-web-app-title" content="S-ylph">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     """, unsafe_allow_html=True)
 
 # タイトル表示
-st.title("S-YLPH")
+st.title("S-ylph")
 st.caption("Sector Yield & Level Prediction Hub - タテトラ2026 シミュレーター")
 
-# --- 3. データ生成ロジック (キャッシュ利用) ---
+# --- 3. データ生成ロジック ---
 @st.cache_data
 def get_sim_data_v3():
     waves = [
